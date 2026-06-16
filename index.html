@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Just Lhey Things — Strategy Cockpit</title>
+  <meta name="description" content="Daily social media strategy cockpit for Just Lhey Things — Filipina freediver & adventurer.">
+  <meta name="theme-color" content="#0a2540">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a2540'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='%232bb3c0' font-family='Georgia,serif' font-weight='bold'%3EL%3C/text%3E%3C/svg%3E">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Just Lhey Things">
+</head>
+<body>
+<!-- Just Lhey Things — Daily Strategy Cockpit (living version) -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --abyss:#0a2540; --deep:#0f3b5c; --tide:#1c6e8c; --lagoon:#2bb3c0; --foam:#cfeef0;
+    --sand:#f3ece1; --sandlit:#faf6ef; --coral:#e8703a; --ink:#14222e; --muted:#6a7d88;
+    --line:rgba(20,34,46,0.10); --good:#2f9e7f; --warn:#d98a2b;
+    --shadow:0 1px 2px rgba(10,37,64,0.06),0 8px 24px rgba(10,37,64,0.07);
+    --serif:"Fraunces",Georgia,serif; --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { margin:0; padding:0; background:var(--sandlit); }
+  .cockpit { font-family:var(--sans); color:var(--ink); line-height:1.5; -webkit-font-smoothing:antialiased;
+    background:radial-gradient(120% 80% at 100% 0%,rgba(43,179,192,0.10),transparent 60%),linear-gradient(180deg,var(--sandlit),var(--sand)); min-height:100vh; }
+  .shell { display:grid; grid-template-columns:96px 1fr; max-width:1180px; margin:0 auto; }
+
+  .gauge { background:linear-gradient(180deg,var(--lagoon) 0%,var(--tide) 28%,var(--deep) 66%,var(--abyss) 100%);
+    color:var(--foam); position:sticky; top:0; height:100vh; display:flex; flex-direction:column; align-items:center; padding:20px 0; }
+  .gauge .crown { font-family:var(--serif); font-weight:600; font-size:15px; writing-mode:vertical-rl; text-orientation:mixed; letter-spacing:0.18em; padding:8px 0; opacity:0.95; }
+  .gauge .mark { flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+    border-top:1px solid rgba(255,255,255,0.14); cursor:pointer; color:inherit; transition:background 0.25s; }
+  .gauge .mark:hover { background:rgba(255,255,255,0.08); }
+  .gauge .mark.active { background:rgba(255,255,255,0.16); }
+  .gauge .mark .depth { font-family:var(--serif); font-size:12px; opacity:0.7; }
+  .gauge .mark .ico { font-size:18px; }
+  .gauge .mark .lbl { font-size:8px; text-transform:uppercase; letter-spacing:0.1em; text-align:center; opacity:0.85; }
+
+  .main { padding:34px 40px 80px; min-width:0; }
+  .topline { display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; }
+  .eyebrow { font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:var(--tide); font-weight:600; }
+  h1 { font-family:var(--serif); font-weight:600; font-size:clamp(30px,4vw,44px); line-height:1.04; letter-spacing:-0.01em; margin-top:4px; }
+  h1 em { font-style:italic; color:var(--tide); }
+  .datechip { background:var(--abyss); color:var(--foam); border-radius:100px; padding:8px 16px; font-size:12.5px; font-weight:500; display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
+  .datechip .dot { width:7px; height:7px; border-radius:50%; background:var(--lagoon); box-shadow:0 0 0 3px rgba(43,179,192,0.25); }
+  .tagline { color:var(--muted); font-size:14.5px; max-width:62ch; margin-top:12px; }
+  .tagline b { color:var(--ink); font-weight:600; }
+
+  .panel { display:none; }
+  .panel.show { display:block; animation:rise 0.4s ease; }
+  @keyframes rise { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:none;} }
+
+  .sec { margin-top:30px; }
+  .sec-h { display:flex; align-items:baseline; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+  .sec-h .n { font-family:var(--serif); font-size:13px; color:var(--coral); font-weight:600; }
+  .sec-h h2 { font-family:var(--serif); font-weight:600; font-size:21px; letter-spacing:-0.01em; }
+  .sec-h .hint { font-size:12.5px; color:var(--muted); margin-left:auto; }
+  .stamp { font-size:11px; color:var(--muted); font-style:italic; }
+  .stamp b { color:var(--good); font-style:normal; }
+
+  .card { background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); }
+  .grid { display:grid; gap:14px; }
+  .g2 { grid-template-columns:repeat(2,1fr); } .g3 { grid-template-columns:repeat(3,1fr); } .g4 { grid-template-columns:repeat(4,1fr); }
+
+  .pillar { padding:18px; border-radius:16px; color:#fff; position:relative; overflow:hidden; min-height:150px; display:flex; flex-direction:column; }
+  .pillar .pct { font-family:var(--serif); font-size:34px; font-weight:600; line-height:1; }
+  .pillar .pct input { font-family:var(--serif); font-size:30px; font-weight:600; width:62px; background:rgba(255,255,255,0.16); border:none; border-radius:8px; color:#fff; padding:2px 6px; }
+  .pillar .pname { font-weight:700; font-size:15px; margin-top:6px; }
+  .pillar .pdesc { font-size:12px; opacity:0.94; margin-top:7px; line-height:1.45; background:transparent; border:none; color:#fff; resize:none; width:100%; font-family:var(--sans); }
+  .pillar .pdesc:focus { outline:1px solid rgba(255,255,255,0.5); border-radius:6px; }
+  .pillar .ptag { margin-top:auto; font-size:10px; text-transform:uppercase; letter-spacing:0.1em; opacity:0.8; padding-top:10px; }
+  .p-dive{background:linear-gradient(150deg,var(--tide),var(--abyss));} .p-roam{background:linear-gradient(150deg,var(--lagoon),var(--tide));}
+  .p-lhey{background:linear-gradient(150deg,var(--coral),#c4542a);} .p-make{background:linear-gradient(150deg,#6a7d88,#46555f);}
+
+  .metric { padding:16px 18px; }
+  .metric .mlabel { font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); font-weight:600; }
+  .metric .mval { font-family:var(--serif); font-size:28px; font-weight:600; margin-top:6px; color:var(--abyss); border:none; background:transparent; width:100%; }
+  .metric .mval:focus { outline:1px solid var(--lagoon); border-radius:6px; }
+  .metric .msub { font-size:12px; color:var(--muted); margin-top:2px; border:none; background:transparent; width:100%; font-family:var(--sans); }
+  .metric .bar { height:6px; border-radius:4px; background:var(--foam); margin-top:10px; overflow:hidden; }
+  .metric .bar>span { display:block; height:100%; background:linear-gradient(90deg,var(--lagoon),var(--tide)); border-radius:4px; }
+
+  .rows { padding:6px 0; }
+  .row { display:flex; gap:14px; padding:13px 18px; border-top:1px solid var(--line); align-items:flex-start; }
+  .row:first-child { border-top:none; }
+  .row .rank { font-family:var(--serif); font-weight:600; color:var(--tide); font-size:15px; min-width:18px; }
+  .row .rmain { flex:1; min-width:0; }
+  .row .rtitle { font-weight:600; font-size:13.5px; }
+  .row .rmeta { font-size:12px; color:var(--muted); margin-top:2px; }
+  .row .rnum { font-family:var(--serif); font-weight:600; font-size:16px; color:var(--abyss); white-space:nowrap; }
+  .pill { display:inline-block; font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:100px; }
+  .pill.win{background:rgba(47,158,127,0.14);color:var(--good);} .pill.soft{background:rgba(217,138,43,0.16);color:var(--warn);} .pill.dive{background:rgba(28,110,140,0.14);color:var(--tide);}
+
+  .note { padding:16px 18px; font-size:13.5px; color:#2c3c46; line-height:1.55; }
+  .note b { color:var(--ink); } .note+.note { border-top:1px solid var(--line); }
+  .note b.c { color:var(--coral); }
+
+  .idea { padding:16px 18px; position:relative; }
+  .idea h4 { font-family:var(--serif); font-size:16px; font-weight:600; }
+  .idea .plat { font-size:11px; color:var(--tide); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-top:3px; }
+  .idea .hook { font-size:13px; color:#2c3c46; margin-top:9px; font-style:italic; }
+  .idea .hook::before{content:"\201C";} .idea .hook::after{content:"\201D";}
+  .idea .cta { font-size:12.5px; color:var(--muted); margin-top:9px; }
+  .idea .cta b { color:var(--coral); font-style:normal; }
+  .idea .del { position:absolute; top:12px; right:12px; background:none; border:none; color:var(--muted); cursor:pointer; font-size:15px; opacity:0.5; }
+  .idea .del:hover { opacity:1; color:var(--coral); }
+
+  .cal { display:grid; grid-template-columns:70px 1fr; }
+  .cal .day { padding:14px 16px; border-top:1px solid var(--line); }
+  .cal .day.dh { font-weight:700; font-family:var(--serif); color:var(--abyss); border-right:1px solid var(--line); }
+  .cal .day:nth-child(1),.cal .day:nth-child(2){border-top:none;}
+
+  .check { padding:6px 0; }
+  .citem { display:flex; gap:12px; padding:11px 18px; border-top:1px solid var(--line); align-items:center; cursor:pointer; }
+  .citem:first-child{border-top:none;}
+  .citem input{width:18px;height:18px;accent-color:var(--tide);cursor:pointer;flex-shrink:0;}
+  .citem label{font-size:13.5px;cursor:pointer;flex:1;}
+  .citem.done label{color:var(--muted);text-decoration:line-through;}
+
+  textarea,input.txt { width:100%; border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-family:var(--sans); font-size:13.5px; color:var(--ink); background:var(--sandlit); resize:vertical; transition:border 0.2s,background 0.2s; }
+  textarea:focus,input.txt:focus { outline:none; border-color:var(--lagoon); background:#fff; }
+  .field { padding:14px 18px; border-top:1px solid var(--line); }
+  .field:first-child{border-top:none;}
+  .field .flabel { font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin-bottom:7px; display:block; }
+
+  .btn { background:var(--abyss); color:var(--foam); border:none; border-radius:100px; padding:10px 20px; font-family:var(--sans); font-weight:600; font-size:13px; cursor:pointer; transition:transform 0.15s,background 0.2s; }
+  .btn:hover { background:var(--deep); transform:translateY(-1px); }
+  .btn.ghost { background:transparent; color:var(--tide); border:1px solid var(--lagoon); }
+  .btn.ghost:hover { background:rgba(43,179,192,0.08); }
+  .btn.coral { background:var(--coral); } .btn.coral:hover { background:#d4612e; }
+  .btn.sm { padding:7px 14px; font-size:12px; }
+  .btnrow { display:flex; gap:10px; flex-wrap:wrap; padding:14px 18px; align-items:center; }
+  .saved { font-size:12px; color:var(--good); font-weight:600; opacity:0; transition:opacity 0.3s; }
+  .saved.show { opacity:1; }
+
+  .promptbox { background:var(--abyss); border-radius:16px; color:var(--foam); overflow:hidden; }
+  .promptbox .ph { padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.12); display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .promptbox .ph h3 { font-family:var(--serif); font-size:16px; font-weight:600; }
+  .promptbox pre { padding:18px 20px; font-family:ui-monospace,Menlo,monospace; font-size:12px; line-height:1.65; white-space:pre-wrap; color:#dbe9ed; max-height:340px; overflow-y:auto; }
+  .copybtn { background:var(--lagoon); color:var(--abyss); border:none; border-radius:100px; padding:8px 16px; font-weight:700; font-size:12px; cursor:pointer; white-space:nowrap; }
+  .copybtn:hover { background:var(--foam); }
+
+  .logentry { padding:13px 18px; border-top:1px solid var(--line); font-size:13px; }
+  .logentry:first-child{border-top:none;}
+  .logentry .ld { font-weight:600; color:var(--tide); font-size:12px; }
+  .logentry .lt { margin-top:4px; color:#2c3c46; white-space:pre-wrap; }
+  .empty { padding:22px 18px; text-align:center; color:var(--muted); font-size:13px; }
+  .empty b { color:var(--ink); display:block; margin-bottom:4px; font-family:var(--serif); }
+
+  .tension { background:linear-gradient(135deg,rgba(232,112,58,0.07),rgba(43,179,192,0.07)); border:1px solid rgba(232,112,58,0.2); }
+
+  .uploadbox { background:linear-gradient(135deg,var(--deep),var(--abyss)); border-radius:16px; color:var(--foam); padding:0; overflow:hidden; }
+  .uploadbox .uh { padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.12); }
+  .uploadbox .uh h3 { font-family:var(--serif); font-size:17px; font-weight:600; }
+  .uploadbox .uh p { font-size:12.5px; opacity:0.8; margin-top:4px; }
+  .uploadbox .ub { padding:16px 20px; }
+  .uploadbox textarea { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.18); color:#eaf6f8; }
+  .uploadbox textarea::placeholder { color:rgba(207,238,240,0.5); }
+  .uploadbox textarea:focus { border-color:var(--lagoon); background:rgba(255,255,255,0.12); }
+  .uptable-wrap { overflow-x:auto; border-radius:12px; border:1px solid rgba(255,255,255,0.14); }
+  .uptable { width:100%; border-collapse:collapse; font-size:12px; min-width:920px; }
+  .uptable th { text-align:left; font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em; color:rgba(207,238,240,0.7); font-weight:700; padding:9px 7px; background:rgba(255,255,255,0.06); border-bottom:1px solid rgba(255,255,255,0.14); white-space:nowrap; }
+  .uptable td { padding:5px 6px; border-bottom:1px solid rgba(255,255,255,0.08); vertical-align:middle; }
+  .uptable tr:last-child td { border-bottom:none; }
+  .uptable input, .uptable select { width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.16); border-radius:6px; color:#eaf6f8; font-family:var(--sans); font-size:12px; padding:6px 7px; min-width:54px; }
+  .uptable input.wide { min-width:130px; }
+  .uptable input.vw { min-width:48px; text-align:right; }
+  .uptable input[type=date] { min-width:118px; color-scheme:dark; }
+  .uptable input:focus, .uptable select:focus { outline:none; border-color:var(--lagoon); background:rgba(255,255,255,0.12); }
+  .uptable select option { background:var(--abyss); color:#eaf6f8; }
+  .uptable .delrow { background:rgba(232,112,58,0.2); border:none; color:#ffd9c7; width:26px; height:26px; border-radius:6px; cursor:pointer; font-size:13px; }
+  .uptable .delrow:hover { background:var(--coral); color:#fff; }
+  .uptable .empty-row td { text-align:center; color:rgba(207,238,240,0.5); font-style:italic; padding:18px; }
+  .gtable { width:100%; border-collapse:collapse; font-size:13px; }
+  .gtable th { text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); font-weight:700; padding:9px 10px; border-bottom:1px solid var(--line); }
+  .gtable td { padding:5px 8px; border-bottom:1px solid var(--line); }
+  .gtable tr:last-child td { border-bottom:none; }
+  .gtable .plat { font-weight:600; color:var(--abyss); }
+  .gtable input { width:100%; border:1px solid var(--line); border-radius:7px; background:var(--sandlit); color:var(--ink); font-family:var(--sans); font-size:13px; padding:7px 9px; text-align:right; }
+  .gtable input:focus { outline:none; border-color:var(--lagoon); background:#fff; }
+  .grow-wk { padding:14px 18px; border-top:1px solid var(--line); }
+  .grow-wk:first-child { border-top:none; }
+  .grow-wk .gw-date { font-weight:700; font-family:var(--serif); color:var(--abyss); font-size:14px; }
+  .grow-wk .gw-rows { margin-top:7px; display:flex; flex-wrap:wrap; gap:8px; }
+  .grow-wk .gw-chip { font-size:12px; background:var(--sandlit); border:1px solid var(--line); border-radius:100px; padding:4px 11px; color:#2c3c46; }
+  .grow-wk .gw-chip b { color:var(--good); }
+  .grow-wk .gw-chip.down b { color:var(--coral); }
+  .sumtable { width:100%; border-collapse:collapse; font-size:13px; min-width:520px; }
+  .sumtable th { text-align:right; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:700; padding:11px 12px; border-bottom:1px solid var(--line); }
+  .sumtable th:first-child { text-align:left; }
+  .sumtable td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:right; font-family:var(--serif); font-weight:600; color:var(--abyss); }
+  .sumtable td:first-child { text-align:left; font-family:var(--sans); font-weight:600; color:var(--tide); font-size:12.5px; }
+  .sumtable tr:last-child td { border-bottom:none; }
+  .sumtable .up { color:var(--good); } .sumtable .dn { color:var(--coral); }
+  .sumtable .base { color:var(--muted); font-style:italic; font-weight:400; font-family:var(--sans); font-size:12px; }
+  .sumtable .empty-row td { text-align:center; color:var(--muted); font-style:italic; font-family:var(--sans); font-weight:400; padding:18px; }
+  .mtoggle { border:1px solid var(--line); background:#fff; color:var(--muted); border-radius:100px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--sans); transition:all 0.15s; }
+  .mtoggle:hover { border-color:var(--lagoon); }
+  .mtoggle.on { background:var(--abyss); color:var(--foam); border-color:var(--abyss); }
+
+  .teamgrid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .team { background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:16px; cursor:pointer; text-align:left; position:relative; overflow:hidden; transition:transform 0.18s,box-shadow 0.2s,border-color 0.2s; display:flex; flex-direction:column; }
+  .team::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent,var(--tide)); }
+  .team:hover { transform:translateY(-3px); box-shadow:0 6px 14px rgba(10,37,64,0.10),0 16px 36px rgba(10,37,64,0.10); border-color:var(--accent,var(--lagoon)); }
+  .team .tco { display:flex; align-items:center; gap:9px; }
+  .team .tico { font-size:18px; }
+  .team .tname { font-family:var(--serif); font-weight:600; font-size:15.5px; }
+  .team .tfocus { font-size:12px; color:var(--muted); margin-top:7px; line-height:1.45; flex:1; }
+  .team .troles { font-size:10.5px; color:var(--tide); margin-top:9px; }
+  .team .summon { margin-top:11px; font-size:11px; font-weight:700; color:var(--accent,var(--tide)); text-transform:uppercase; letter-spacing:0.08em; display:flex; align-items:center; gap:5px; }
+  .team .summon::after { content:"\2192"; transition:transform 0.18s; }
+  .team:hover .summon::after { transform:translateX(3px); }
+  .team .hasout { position:absolute; top:12px; right:12px; font-size:9px; font-weight:700; background:rgba(47,158,127,0.16); color:var(--good); padding:3px 7px; border-radius:100px; text-transform:uppercase; letter-spacing:0.05em; }
+
+  .scrim { position:fixed; inset:0; background:rgba(10,37,64,0.55); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; padding:20px; z-index:50; }
+  .scrim.show { display:flex; animation:rise 0.25s ease; }
+  .modal { background:var(--sandlit); border-radius:18px; max-width:640px; width:100%; max-height:88vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 60px rgba(10,37,64,0.4); }
+  .modal .mh { padding:18px 22px; background:var(--accent,var(--abyss)); color:#fff; display:flex; align-items:center; gap:12px; }
+  .modal .mh .mhico { font-size:22px; }
+  .modal .mh h3 { font-family:var(--serif); font-size:19px; font-weight:600; flex:1; }
+  .modal .mh .x { background:rgba(255,255,255,0.18); border:none; color:#fff; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px; }
+  .modal .mh .x:hover { background:rgba(255,255,255,0.3); }
+  .modal .mbody { padding:18px 22px; overflow-y:auto; }
+  .modal .mroles { font-size:12px; color:var(--muted); margin-bottom:14px; }
+  .modal .mroles b { color:var(--tide); }
+  .modal .mlabel2 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin:14px 0 7px; }
+  .modal pre { background:var(--abyss); color:#dbe9ed; border-radius:12px; padding:16px; font-family:ui-monospace,Menlo,monospace; font-size:11.5px; line-height:1.6; white-space:pre-wrap; }
+  .modal .outbox { background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; font-size:13px; line-height:1.55; white-space:pre-wrap; color:#2c3c46; min-height:60px; }
+  .modal .outbox:empty::before { content:"No saved output yet. Copy the prompt, paste it to Claude in chat, then paste what comes back here so this team remembers."; color:var(--muted); font-style:italic; }
+  .modal .mfoot { padding:14px 22px; border-top:1px solid var(--line); display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+  @media (max-width:760px) {
+    .shell { grid-template-columns:64px 1fr; }
+    .gauge .mark .lbl { display:none; }
+    .main { padding:24px 18px 70px; }
+    .g2,.g3,.g4,.teamgrid { grid-template-columns:1fr; }
+    .cal { grid-template-columns:56px 1fr; }
+  }
+  .reduced * { animation:none!important; transition:none!important; }
+</style>
+
+<div class="cockpit" id="cockpit">
+  <div class="shell">
+    <nav class="gauge" id="gauge">
+      <div class="crown">LHEY</div>
+      <div class="mark active" data-tab="report"><span class="depth">0m</span><span class="ico">📈</span><span class="lbl">Report</span></div>
+      <div class="mark" data-tab="today"><span class="depth">3m</span><span class="ico">☀️</span><span class="lbl">Today</span></div>
+      <div class="mark" data-tab="pillars"><span class="depth">8m</span><span class="ico">🌊</span><span class="lbl">Pillars</span></div>
+      <div class="mark" data-tab="numbers"><span class="depth">12m</span><span class="ico">📊</span><span class="lbl">Numbers</span></div>
+      <div class="mark" data-tab="growth"><span class="depth">14m</span><span class="ico">📉</span><span class="lbl">Growth</span></div>
+      <div class="mark" data-tab="ideas"><span class="depth">16m</span><span class="ico">💡</span><span class="lbl">Ideas</span></div>
+      <div class="mark" data-tab="hunt"><span class="depth">20m</span><span class="ico">🔭</span><span class="lbl">Hunt</span></div>
+      <div class="mark" data-tab="team"><span class="depth">25m</span><span class="ico">⚓</span><span class="lbl">War Room</span></div>
+      <div class="mark" data-tab="log"><span class="depth">30m</span><span class="ico">📒</span><span class="lbl">Log</span></div>
+    </nav>
+
+    <main class="main">
+      <div class="topline">
+        <div><div class="eyebrow">Just Lhey Things · Living Cockpit</div><h1>Morning, <em>Lhey</em>.</h1></div>
+        <div class="datechip"><span class="dot"></span><span id="today-date">—</span></div>
+      </div>
+      <p class="tagline">Everything here is <b>yours to edit and it remembers</b>. Drop your latest uploads in the box below, summon a team, paste back what Claude gives you — and the pillars, numbers, and ideas evolve as you feed it.</p>
+
+      <!-- REPORT (30-day) -->
+      <section class="panel show" id="tab-report">
+        <div class="sec">
+          <div class="sec-h"><span class="n">01</span><h2>30-day report</h2><span class="hint">last 28–30 days · YouTube + Instagram</span></div>
+          <div class="grid g4">
+            <div class="card metric"><div class="mlabel">Total views</div><div class="mval" id="kpi-views">—</div><div class="msub">across tracked posts</div></div>
+            <div class="card metric"><div class="mlabel">Top post</div><div class="mval" style="font-size:20px;line-height:1.2;">1,166</div><div class="msub">family tree short · 51.7% avg</div></div>
+            <div class="card metric"><div class="mlabel">Best retention</div><div class="mval">51.7%</div><div class="msub">12-sec funny short</div></div>
+            <div class="card metric"><div class="mlabel">Shorts share</div><div class="mval">55.9%</div><div class="msub">of all discovery</div></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><span class="n">02</span><h2>Where views come from</h2><span class="hint">discovery mix</span></div>
+          <div class="grid g2">
+            <div class="card" style="padding:18px;"><svg id="chart-donut" viewBox="0 0 320 220" width="100%" role="img" aria-label="Discovery source breakdown"></svg></div>
+            <div class="card" style="padding:18px;display:flex;flex-direction:column;justify-content:center;"><div id="donut-legend"></div></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><span class="n">03</span><h2>Top posts by views</h2><span class="hint">funny vs dive, side by side</span></div>
+          <div class="card" style="padding:20px;"><svg id="chart-bars" viewBox="0 0 640 300" width="100%" role="img" aria-label="Top posts by views"></svg></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><span class="n">04</span><h2>Retention vs views</h2><span class="hint">the pattern that decides your strategy</span></div>
+          <div class="card" style="padding:20px;"><svg id="chart-scatter" viewBox="0 0 640 300" width="100%" role="img" aria-label="Retention versus views scatter"></svg></div>
+          <div class="card note" style="margin-top:14px;"><b>What the charts say:</b> your funny, personal posts (green) cluster top-right — high views <i>and</i> high retention. The dive-titled posts (blue) sit low-left. The 12-second family-tree short is the outlier that proves the thesis: <b class="c">lead with humor, keep the dive as the surprise.</b></div>
+        </div>
+      </section>
+
+      <!-- TODAY -->
+      <section class="panel" id="tab-today">
+        <div class="sec">
+          <div class="sec-h"><span class="n">01</span><h2>Latest uploads — feed the room</h2><span class="hint" id="up-stamp">not fed yet</span></div>
+          <div class="uploadbox">
+            <div class="uh"><h3>📥 What did you post lately?</h3><p>One row per post — date, platform, format, and engagement. Subscriber growth lives in the Growth tab (it's per-account, not per-post). Teams and the report read from here.</p></div>
+            <div class="ub">
+              <div class="uptable-wrap">
+                <table class="uptable" id="uptable">
+                  <thead><tr><th>Date</th><th>Platform</th><th>Title</th><th>Format</th><th>Views</th><th>Likes</th><th>Comments</th><th>Shares</th><th>Saves</th><th>Ret %</th><th>Link</th><th></th></tr></thead>
+                  <tbody id="uptable-body"></tbody>
+                </table>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center;">
+                <button class="btn" onclick="addUploadRow()">+ Add post</button>
+                <button class="btn ghost" onclick="saveUploads()">Save table</button>
+                <span class="saved" id="up-saved">Saved ✓</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sec-h"><span class="n">02</span><h2>Today's three breaths</h2><span class="hint">resets each morning</span></div>
+          <div class="card check" id="checklist"></div>
+          <div class="card" style="margin-top:14px;">
+            <div class="field"><span class="flabel">One honest line — how's the work feeling today?</span><textarea id="mood" rows="2" placeholder="not a metric. just you."></textarea></div>
+            <div class="btnrow"><button class="btn" onclick="saveToday()">Save today</button><span class="saved" id="today-saved">Saved ✓</span></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sec-h"><span class="n">03</span><h2>The decision on the table</h2></div>
+          <div class="card tension"><div class="note"><b class="c">Lead with humor, dive as the surprise.</b> Your top posts everywhere are self-deprecating solo-Tita jokes over calm water — not silent dive clips. Keep diving as the "wait, she actually does <i>this</i>?" reveal, not the opening hook. Editable in Pillars as the data shifts.</div></div>
+        </div>
+      </section>
+
+      <!-- PILLARS (5m) editable -->
+      <section class="panel" id="tab-pillars">
+        <div class="sec">
+          <div class="sec-h"><span class="n">01</span><h2>Content pillars</h2><span class="stamp" id="pillar-stamp"></span><span class="hint">tap any % or text to edit</span></div>
+          <div class="grid g4" id="pillargrid"></div>
+          <div class="btnrow" style="padding-left:0;"><button class="btn sm" onclick="savePillars()">Save pillars</button><span class="saved" id="pillar-saved">Saved ✓</span></div>
+        </div>
+        <div class="sec">
+          <div class="sec-h"><span class="n">02</span><h2>Voice rules — evolve as you find your sound</h2><span class="stamp" id="voice-stamp"></span></div>
+          <div class="card" id="voicelist"></div>
+          <div class="btnrow"><button class="btn sm" onclick="addVoice()">+ Add a voice rule</button><button class="btn sm ghost" onclick="saveVoice()">Save voice</button><span class="saved" id="voice-saved">Saved ✓</span></div>
+        </div>
+      </section>
+
+      <!-- NUMBERS (10m) editable -->
+      <section class="panel" id="tab-numbers">
+        <div class="sec">
+          <div class="sec-h"><span class="n">01</span><h2>Weekly gains — what was added</h2><span class="hint">from your Growth-tab entries</span></div>
+          <div class="card" style="overflow-x:auto;">
+            <table class="sumtable" id="weekly-summary">
+              <thead><tr><th>Week</th><th>Subs</th><th>Views</th><th>Likes</th><th>Comments</th><th>Shares</th><th>Saves</th></tr></thead>
+              <tbody id="weekly-summary-body"></tbody>
+            </table>
+          </div>
+          <div class="card note" style="margin-top:12px;font-size:12.5px;">This table reads from the <b>Growth tab (14m)</b>. Log a week's totals there and the gains appear here automatically — green is growth, the first week is your baseline.</div>
+        </div>
+        <div class="sec">
+          <div class="sec-h"><span class="n">02</span><h2>Performance per video</h2><span class="hint">from your post table</span></div>
+          <div class="card" style="padding:18px;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;" id="vid-metric-toggle"></div>
+            <svg id="chart-videos" viewBox="0 0 660 320" width="100%" role="img" aria-label="Performance per video"></svg>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sec-h"><span class="n">03</span><h2>Discovery sources</h2><span class="stamp" id="disc-stamp"></span><span class="hint">tap to update each cycle</span></div>
+          <div class="grid g3" id="discgrid"></div>
+          <div class="btnrow" style="padding-left:0;"><button class="btn sm" onclick="saveDisc()">Save sources</button><span class="saved" id="disc-saved">Saved ✓</span></div>
+        </div>
+        <div class="sec">
+          <div class="sec-h"><span class="n">04</span><h2>Top content — auto-built from your uploads</h2><span class="hint">edit freely</span></div>
+          <div class="card rows" id="toprows"></div>
+          <div class="btnrow"><button class="btn sm" onclick="rebuildFromUploads()">↻ Rebuild from uploads</button><button class="btn sm ghost" onclick="addTopRow()">+ Add row</button><button class="btn sm ghost" onclick="saveTop()">Save</button><span class="saved" id="top-saved">Saved ✓</span></div>
+        </div>
+        <div class="sec">
+          <div class="sec-h"><span class="n">05</span><h2>This week's snapshot</h2></div>
+          <div class="card">
+            <div class="grid g2" style="gap:0;">
+              <div class="field"><span class="flabel">Followers (± since last)</span><input class="txt" id="n_followers" placeholder="IG 840 (+22), YT 310 (+8)"></div>
+              <div class="field"><span class="flabel">Best post (+ why)</span><input class="txt" id="n_best" placeholder="title — your guess why"></div>
+              <div class="field"><span class="flabel">Total views / reach</span><input class="txt" id="n_reach"></div>
+              <div class="field"><span class="flabel">Saves + shares leader</span><input class="txt" id="n_saves"></div>
+            </div>
+            <div class="btnrow"><button class="btn" onclick="saveNumbers()">Save snapshot</button><span class="saved" id="num-saved">Saved ✓</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GROWTH (weekly) -->
+      <section class="panel" id="tab-growth">
+        <div class="sec">
+          <div class="sec-h"><span class="n">01</span><h2>Weekly growth</h2><span class="hint">subscribers + views added, week over week</span></div>
+          <p class="tagline" style="margin-top:0;">Log your <b>total</b> subscribers, views, and engagement per platform once a week. The tracker does the math — how many you <b>added</b> since last week. The Numbers tab (12m) summarizes the weekly gains. Watch the deltas, not the totals.</p>
+          <div class="grid g4" style="margin-top:14px;">
+            <div class="card metric"><div class="mlabel">Subs added (latest wk)</div><div class="mval" id="g-subs-delta">—</div><div class="msub" id="g-subs-sub">all platforms</div></div>
+            <div class="card metric"><div class="mlabel">Views added (latest wk)</div><div class="mval" id="g-views-delta">—</div><div class="msub" id="g-views-sub">all platforms</div></div>
+            <div class="card metric"><div class="mlabel">Total subscribers</div><div class="mval" id="g-subs-total">—</div><div class="msub">current, all platforms</div></div>
+            <div class="card metric"><div class="mlabel">Best-growing platform</div><div class="mval" id="g-best" style="font-size:20px;line-height:1.2;">—</div><div class="msub">most subs added latest wk</div></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><span class="n">02</span><h2>This week's numbers</h2><span class="hint">enter totals, not the change</span></div>
+          <div class="card">
+            <div class="field" style="border-top:none;">
+              <span class="flabel">Week starting</span>
+              <input type="date" class="txt" id="g-week" style="max-width:200px;">
+            </div>
+            <div class="uptable-wrap" style="margin:0 18px 14px; border-color:var(--line);">
+              <table class="gtable" id="gtable">
+                <thead><tr><th>Platform</th><th>Subscribers</th><th>Views</th><th>Likes</th><th>Comments</th><th>Shares</th><th>Saves</th></tr></thead>
+                <tbody id="gtable-body"></tbody>
+              </table>
+            </div>
+            <div class="btnrow"><button class="btn coral" onclick="saveGrowthWeek()">Save this week</button><button class="btn ghost" onclick="loadLatestIntoForm()">Copy last week's totals</button><span class="saved" id="g-saved">Saved ✓</span></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><span class="n">03</span><h2>Subscribers added per week</h2><span class="hint">the climb</span></div>
+          <div class="card" style="padding:20px;"><svg id="chart-growth" viewBox="0 0 660 280" width="100%" role="img" aria-label="Subscribers added per week"></svg></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><span class="n">04</span><h2>Week history</h2><span class="hint">newest first</span></div>
+          <div class="card" id="growth-history"></div>
+        </div>
+      </section>
+
+      <!-- IDEAS (15m) editable -->
+      <section class="panel" id="tab-ideas">
+        <div class="sec">
+          <div class="sec-h"><span class="n">01</span><h2>Ready-to-film ideas</h2><span class="stamp" id="ideas-stamp"></span><span class="hint">grows as teams generate more</span></div>
+          <div class="grid g2" id="ideagrid"></div>
+          <div class="card" style="margin-top:14px;">
+            <div class="field"><span class="flabel">Add an idea</span><input class="txt" id="i_title" placeholder="idea title" style="margin-bottom:8px;"><input class="txt" id="i_plat" placeholder="platform (Reel · Short...)" style="margin-bottom:8px;"><input class="txt" id="i_hook" placeholder="the hook" style="margin-bottom:8px;"><input class="txt" id="i_cta" placeholder="CTA"></div>
+            <div class="btnrow"><button class="btn coral" onclick="addIdea()">Add idea</button><span class="saved" id="idea-saved">Added ✓</span></div>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sec-h"><span class="n">02</span><h2>Weekly rhythm</h2><span class="hint">three you can hold</span></div>
+          <div class="card cal">
+            <div class="day dh">Mon</div><div class="day"><b>Lhey or Dive</b> — Reel/Short. A funny solo-girl line, or a dive clip with one honest line about how it felt.</div>
+            <div class="day dh">Thu</div><div class="day"><b>Roam or Lhey</b> — Reel or carousel. A spot guide, or day-in-the-life with your face and voice.</div>
+            <div class="day dh">Sat</div><div class="day"><b>Rotate</b> — longer YT, or monthly crochet/bake aside. Batch-film when you're already out.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HUNT -->
+      <section class="panel" id="tab-hunt">
+        <div class="sec">
+          <div class="sec-h"><span class="n">01</span><h2>The morning hunt</h2><span class="hint">copy → paste to Claude</span></div>
+          <p class="tagline" style="margin-top:0;">I can't auto-scrape competitors overnight — no chat artifact can. The real loop: copy this, paste to me each morning, I run live searches for fresh viral outliers, you log what's worth borrowing.</p>
+          <div class="promptbox" style="margin-top:14px;">
+            <div class="ph"><h3>🔭 Daily Outlier Hunt</h3><button class="copybtn" onclick="copyText('prompt-text',this)">Copy prompt</button></div>
+            <pre id="prompt-text">Run my Just Lhey Things morning hunt. I'm the Filipina freediver/adventurer whose data shows Tita-coded solo-travel humor outperforms silent dive clips.
+
+Search for and bring me TODAY:
+1. 3–5 viral outliers (last 7 days) from PH travel / freedive / solo-female / "Tita humor" creators — anything punching way above its follower count.
+2. For each: the hook (first 1–2 sec), the structure, why it worked, the ONE thing I could borrow without copying.
+3. One trend I should NOT chase because it'd break my calm-adventurer brand.
+4. One evergreen search angle (Coron/Anilao/Siargao) I haven't used yet.
+
+Keep it to patterns I can act on this week. Challenge weak ideas. Talk in my voice, not corporate.</pre>
+          </div>
+        </div>
+        <div class="sec">
+          <div class="sec-h"><span class="n">02</span><h2>Hunt log</h2><span class="hint">pattern library over time</span></div>
+          <div class="card">
+            <div class="field"><span class="flabel">Outlier / competitor spotted</span><input class="txt" id="h_who" placeholder="creator or post — its view-to-follower jump"></div>
+            <div class="field"><span class="flabel">One thing worth borrowing (structure, not content)</span><textarea id="h_steal" rows="2"></textarea></div>
+            <div class="btnrow"><button class="btn coral" onclick="saveHunt()">Add to hunt log</button><span class="saved" id="hunt-saved">Logged ✓</span></div>
+          </div>
+          <div class="card" style="margin-top:14px;" id="hunt-log"></div>
+        </div>
+      </section>
+
+      <!-- WAR ROOM -->
+      <section class="panel" id="tab-team">
+        <div class="sec">
+          <div class="sec-h"><span class="n">01</span><h2>The War Room</h2><span class="hint">each team works off your latest uploads</span></div>
+          <p class="tagline" style="margin-top:0;">Every team's prompt is built live from your <b>saved uploads</b> and current pillars. Tap a team, copy its prompt, paste to me in chat — then paste my answer back so the team <b>remembers its last work</b>. Teams with saved output show a green tag.</p>
+          <div class="teamgrid" id="teamgrid" style="margin-top:16px;"></div>
+        </div>
+        <div class="sec">
+          <div class="sec-h"><span class="n">02</span><h2>The solo-creator squad</h2><span class="hint">if you only summon a few</span></div>
+          <div class="card note">When you're one person doing all of this, summon these five most: <b>Audience Psychology</b> (why the Tita jokes land), <b>Research</b> (the morning Hunt), <b>Knowledge & Voice</b> (keeps captions sounding like you), <b>Writing</b> (idea → film-ready), and <b>SEO & Discovery</b> (gets Coron/Anilao found).</div>
+        </div>
+      </section>
+
+      <!-- LOG -->
+      <section class="panel" id="tab-log">
+        <div class="sec">
+          <div class="sec-h"><span class="n">01</span><h2>The captain's log</h2><span class="hint">saved daily record</span></div>
+          <div class="card">
+            <div class="field"><span class="flabel">What did I post / film today?</span><textarea id="l_did" rows="2" placeholder="even 'nothing, rested' counts"></textarea></div>
+            <div class="field"><span class="flabel">Most response — and a guess why?</span><textarea id="l_win" rows="2"></textarea></div>
+            <div class="field"><span class="flabel">Tomorrow's one move</span><input class="txt" id="l_next"></div>
+            <div class="btnrow"><button class="btn" onclick="saveLog()">Save to log</button><button class="btn ghost" onclick="clearLog()">Clear history</button><span class="saved" id="log-saved">Saved ✓</span></div>
+          </div>
+          <div class="card" style="margin-top:14px;" id="log-history"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="scrim" id="scrim">
+    <div class="modal" id="modal">
+      <div class="mh" id="modal-head"><span class="mhico" id="modal-ico">⚓</span><h3 id="modal-title">Team</h3><button class="x" onclick="closeModal()" aria-label="Close">✕</button></div>
+      <div class="mbody">
+        <div class="mroles" id="modal-roles"></div>
+        <div class="mlabel2">Prompt — built from your saved uploads</div>
+        <pre id="modal-prompt"></pre>
+        <div class="mlabel2">This team's last work — paste Claude's reply here so it remembers</div>
+        <div class="outbox" id="modal-out" contenteditable="true"></div>
+      </div>
+      <div class="mfoot">
+        <button class="btn coral" onclick="copyModalPrompt()">Copy prompt</button>
+        <button class="btn" onclick="saveTeamOutput()">Save this team's work</button>
+        <button class="btn ghost" onclick="closeModal()">Close</button>
+        <span class="saved" id="modal-saved">Done ✓</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const root = document.getElementById('cockpit');
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) root.classList.add('reduced');
+  const now = new Date();
+  const dstr = now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('today-date').textContent = dstr;
+  const todayKey = now.toISOString().slice(0,10);
+
+  // Storage: uses localStorage on the web (saves in your browser, no login needed).
+  // Falls back to Claude's window.storage when running inside the Claude artifact viewer.
+  const HAS_CLAUDE_STORAGE = (typeof window !== 'undefined' && window.storage && typeof window.storage.get === 'function');
+  const LS_PREFIX = 'jlt:'; // namespacing so it won't collide with anything else on the domain
+  async function sGet(k){
+    try{
+      if(HAS_CLAUDE_STORAGE){ const r=await window.storage.get(k); return r?JSON.parse(r.value):null; }
+      const raw=localStorage.getItem(LS_PREFIX+k); return raw?JSON.parse(raw):null;
+    }catch(e){ return null; }
+  }
+  async function sSet(k,v){
+    try{
+      if(HAS_CLAUDE_STORAGE){ await window.storage.set(k,JSON.stringify(v)); return true; }
+      localStorage.setItem(LS_PREFIX+k, JSON.stringify(v)); return true;
+    }catch(e){ return false; }
+  }
+  function flash(id){ const e=document.getElementById(id); if(!e)return; e.classList.add('show'); setTimeout(()=>e.classList.remove('show'),1600); }
+  function stamp(id){ const e=document.getElementById(id); if(e) e.innerHTML='updated <b>'+dstr+'</b>'; }
+  window.copyText=(id,btn)=>{ navigator.clipboard.writeText(document.getElementById(id).textContent).then(()=>{ const o=btn.textContent; btn.textContent='Copied \u2713'; setTimeout(()=>btn.textContent=o,1500); }).catch(()=>{}); };
+
+  document.querySelectorAll('.gauge .mark').forEach(m=>{
+    m.addEventListener('click',()=>{
+      document.querySelectorAll('.gauge .mark').forEach(x=>x.classList.remove('active'));
+      m.classList.add('active');
+      document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+      document.getElementById('tab-'+m.dataset.tab).classList.add('show');
+      if(m.dataset.tab==='report') drawReport();
+      if(m.dataset.tab==='numbers'){ renderWeeklySummary(); renderVidToggle(); drawVideoChart(); }
+      if(m.dataset.tab==='growth') renderGrowth();
+      document.querySelector('.main').scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+
+  const DEF_PILLARS=[
+    {cls:'p-lhey',pct:35,name:'Lhey (the person)',desc:'Tita humor, solo-girl jokes, fears faced, the why. What is actually winning \u2014 promote it.',tag:'The glue \u00B7 now the lead'},
+    {cls:'p-roam',pct:30,name:'Roam',desc:'Coron, Siargao, Cebu, Bohol. Practical spot guides with your face and a joke in the caption.',tag:'Reach + search'},
+    {cls:'p-dive',pct:25,name:'Dive',desc:'The rare lane \u2014 filmed with personality, fear, bad attempts. Not silent aesthetic clips.',tag:'The surprise'},
+    {cls:'p-make',pct:10,name:'Make',desc:'Occasional crochet/bake. Your one proven earner, kept quietly alive in the background.',tag:'Quiet income'}
+  ];
+  const DEF_VOICE=[
+    'Write like you text. Lowercase-friendly, flowing, real. "Hey there! I\'m Lhey." Talk to one person.',
+    'Taglish is an asset. "Summer ready kana ba?" signals a real Filipina, not a polished foreign brand.',
+    'Steady, not hyped. Calm and unhurried is your lane \u2014 the perfect match for freediving.',
+    'Show the fear, the cold, the failed attempt \u2014 then the calm after. Never only the fearless version.'
+  ];
+  const DEF_DISC=[
+    {label:'Shorts feed',val:'55.9%',sub:'1,144 views \u2014 your biggest door in',bar:56},
+    {label:'Browse / Home',val:'23.4%',sub:'478 views \u2014 loyal regulars',bar:23},
+    {label:'YouTube search',val:'5.6%',sub:'115 views \u2014 evergreen upside',bar:6}
+  ];
+  const DEF_TOP=[
+    {t:"The family tree is shaking \uD83E\uDD23 #coron",m:"0:12 \u00B7 51.7% avg \u2014 personal + funny, not a dive clip",n:"1,166",pill:"win"},
+    {t:"Solo Freediving Coron | Barracuda Lake",m:"1:27 \u00B7 15.2% avg",n:"467",pill:"dive"},
+    {t:"Solo Traveling Coron: I Pushed Too Far",m:"2:06 \u00B7 9.5% avg",n:"159",pill:"dive"},
+    {t:"ALONE IN SIARGAO",m:"5:47 \u00B7 29.3% avg \u2014 long form holds attention",n:"127",pill:"win"},
+    {t:'IG: "floating like seaweed" POV',m:"self-deprecating solo-girl joke over calm water",n:"1.7K",pill:"win"},
+    {t:'IG: "family waiting for you to have kids"',m:"single-woman humor \u2014 landed hard",n:"1.2K",pill:"win"}
+  ];
+  const DEF_IDEAS=[
+    {title:"The family tree, part 2",plat:"Reel \u00B7 TikTok \u00B7 Short",hook:"everyone keeps asking when I'll settle down. anyway here's me at 10 meters holding my breath",cta:"tag a fellow tita who'd rather be in the water"},
+    {title:"The first time I freedived, I almost quit",plat:"Reel \u00B7 YT Short",hook:"everyone thinks freediving is fearless. my first session I almost climbed back on the boat",cta:"save this if you've wanted to try but felt scared. part 2 coming"},
+    {title:"Anilao freedive trip: what it actually costs",plat:"Carousel \u00B7 YT long-form",hook:"want to try freediving 3 hours from Manila? here's the real budget, no fluff",cta:'comment "ANILAO" and I\'ll send booking details'},
+    {title:"Things I make on land // how I move in water",plat:"Reel",hook:"I crochet bikinis on the couch and hold my breath at 10 meters. same person",cta:"which Lhey are you following me for? tell me below"}
+  ];
+
+  let pillars,voice,disc,top,ideas;
+
+  const PLATFORMS=['YouTube','Instagram','TikTok','Facebook','Threads','X'];
+  const FORMATS=['Short-form','Long-form','Carousel','Graphic','Reel','Story'];
+  const DEF_UPLOADS=[
+    {date:'2026-06-12',platform:'YouTube',title:'The family tree is shaking',format:'Short-form',views:'1,166',likes:'',comments:'',shares:'',saves:'',ret:'51.7',link:''},
+    {date:'2026-05-10',platform:'YouTube',title:'Solo Freediving | Barracuda Lake',format:'Long-form',views:'467',likes:'',comments:'',shares:'',saves:'',ret:'15.2',link:''},
+    {date:'2026-06-01',platform:'Instagram',title:'floating like seaweed POV',format:'Reel',views:'1.7K',likes:'',comments:'',shares:'',saves:'36',ret:'',link:''},
+    {date:'2026-06-03',platform:'Instagram',title:'family waiting for you to have kids',format:'Reel',views:'1.2K',likes:'',comments:'',shares:'',saves:'33',ret:'',link:''}
+  ];
+  let uploads;
+  async function loadUploads(){ uploads=await sGet('uploads_rows')||DEF_UPLOADS.map(u=>({...u})); renderUploads(); const d=await sGet('uploads_meta'); if(d&&d.when) document.getElementById('up-stamp').textContent='fed '+d.when; }
+  function renderUploads(){
+    const body=document.getElementById('uptable-body');
+    if(!uploads.length){ body.innerHTML='<tr class="empty-row"><td colspan="12">No posts yet — hit “+ Add post”.</td></tr>'; return; }
+    const popt=(sel)=>PLATFORMS.map(p=>'<option'+(p===sel?' selected':'')+'>'+p+'</option>').join('');
+    const fopt=(sel)=>FORMATS.map(f=>'<option'+(f===sel?' selected':'')+'>'+f+'</option>').join('');
+    const esc=(v)=>(v||'').replace(/"/g,'&quot;');
+    body.innerHTML=uploads.map((u,i)=>'<tr>'+
+      '<td><input type="date" data-i="'+i+'" data-f="date" value="'+esc(u.date)+'"></td>'+
+      '<td><select data-i="'+i+'" data-f="platform">'+popt(u.platform)+'</select></td>'+
+      '<td><input class="wide" data-i="'+i+'" data-f="title" value="'+esc(u.title)+'" placeholder="post title"></td>'+
+      '<td><select data-i="'+i+'" data-f="format">'+fopt(u.format)+'</select></td>'+
+      '<td><input class="vw" data-i="'+i+'" data-f="views" value="'+esc(u.views)+'" placeholder="0"></td>'+
+      '<td><input class="vw" data-i="'+i+'" data-f="likes" value="'+esc(u.likes)+'" placeholder="—"></td>'+
+      '<td><input class="vw" data-i="'+i+'" data-f="comments" value="'+esc(u.comments)+'" placeholder="—"></td>'+
+      '<td><input class="vw" data-i="'+i+'" data-f="shares" value="'+esc(u.shares)+'" placeholder="—"></td>'+
+      '<td><input class="vw" data-i="'+i+'" data-f="saves" value="'+esc(u.saves)+'" placeholder="—"></td>'+
+      '<td><input class="vw" data-i="'+i+'" data-f="ret" value="'+esc(u.ret)+'" placeholder="—"></td>'+
+      '<td><input data-i="'+i+'" data-f="link" value="'+esc(u.link)+'" placeholder="url"></td>'+
+      '<td><button class="delrow" onclick="delUploadRow('+i+')" title="remove">✕</button></td>'+
+    '</tr>').join('');
+    body.querySelectorAll('[data-f]').forEach(el=>el.addEventListener('input',e=>{ uploads[e.target.dataset.i][e.target.dataset.f]=e.target.value; }));
+  }
+  window.addUploadRow=()=>{ uploads.push({date:'',platform:'YouTube',title:'',format:'Short-form',views:'',likes:'',comments:'',shares:'',saves:'',ret:'',link:''}); renderUploads(); };
+  window.delUploadRow=(i)=>{ uploads.splice(i,1); renderUploads(); };
+  window.saveUploads=async()=>{ await sSet('uploads_rows',uploads); await sSet('uploads_meta',{when:dstr}); document.getElementById('up-stamp').textContent='fed '+dstr; flash('up-saved'); renderTeams(); drawReport(); drawVideoChart(); };
+  async function getUploadsText(){
+    const rows=await sGet('uploads_rows')||uploads||[];
+    if(!rows.length) return '(no uploads fed yet)';
+    return rows.map(u=>`- ${u.date||'?'} | ${u.platform} | ${u.title||'(untitled)'} | ${u.format} | ${u.views||'0'} views${u.saves?', '+u.saves+' saves':''}${u.shares?', '+u.shares+' shares':''}${u.ret?', '+u.ret+'% ret':''}`).join('\n');
+  }
+
+  async function loadPillars(){ pillars=await sGet('pillars')||DEF_PILLARS.map(p=>({...p})); renderPillars(); const d=await sGet('pillars_meta'); if(d&&d.when){const e=document.getElementById('pillar-stamp'); e.innerHTML='updated <b>'+d.when+'</b>';} }
+  function renderPillars(){
+    document.getElementById('pillargrid').innerHTML=pillars.map((p,i)=>'<div class="pillar '+p.cls+'"><div class="pct"><input type="text" value="'+p.pct+'" data-i="'+i+'" data-f="pct" size="3">%</div><div class="pname">'+p.name+'</div><textarea class="pdesc" data-i="'+i+'" data-f="desc" rows="3">'+p.desc+'</textarea><div class="ptag">'+p.tag+'</div></div>').join('');
+    document.querySelectorAll('#pillargrid [data-f]').forEach(el=>el.addEventListener('input',e=>{ pillars[e.target.dataset.i][e.target.dataset.f]=e.target.value; }));
+  }
+  window.savePillars=async()=>{ await sSet('pillars',pillars); await sSet('pillars_meta',{when:dstr}); stamp('pillar-stamp'); flash('pillar-saved'); renderTeams(); };
+
+  async function loadVoice(){ voice=await sGet('voice')||DEF_VOICE.slice(); renderVoice(); const d=await sGet('voice_meta'); if(d&&d.when){const e=document.getElementById('voice-stamp');e.innerHTML='updated <b>'+d.when+'</b>';} }
+  function renderVoice(){
+    document.getElementById('voicelist').innerHTML=voice.map((v,i)=>'<div class="field"><textarea data-i="'+i+'" rows="2">'+v+'</textarea></div>').join('');
+    document.querySelectorAll('#voicelist textarea').forEach(el=>el.addEventListener('input',e=>{ voice[e.target.dataset.i]=e.target.value; }));
+  }
+  window.addVoice=()=>{ voice.push('new voice rule\u2026'); renderVoice(); };
+  window.saveVoice=async()=>{ voice=voice.filter(v=>v.trim()); await sSet('voice',voice); await sSet('voice_meta',{when:dstr}); stamp('voice-stamp'); renderVoice(); flash('voice-saved'); };
+
+  async function loadDisc(){ disc=await sGet('disc')||DEF_DISC.map(d=>({...d})); renderDisc(); const m=await sGet('disc_meta'); if(m&&m.when){const e=document.getElementById('disc-stamp');e.innerHTML='updated <b>'+m.when+'</b>';} }
+  function renderDisc(){
+    document.getElementById('discgrid').innerHTML=disc.map((d,i)=>'<div class="card metric"><div class="mlabel">'+d.label+'</div><input class="mval" value="'+d.val+'" data-i="'+i+'" data-f="val"><input class="msub" value="'+d.sub+'" data-i="'+i+'" data-f="sub"><div class="bar"><span style="width:'+d.bar+'%"></span></div></div>').join('');
+    document.querySelectorAll('#discgrid [data-f]').forEach(el=>el.addEventListener('input',e=>{ disc[e.target.dataset.i][e.target.dataset.f]=e.target.value; const n=parseFloat(e.target.value); if(e.target.dataset.f==='val'&&!isNaN(n)){ disc[e.target.dataset.i].bar=Math.min(100,n); document.querySelectorAll('#discgrid .bar>span')[e.target.dataset.i].style.width=Math.min(100,n)+'%'; } }));
+  }
+  window.saveDisc=async()=>{ await sSet('disc',disc); await sSet('disc_meta',{when:dstr}); stamp('disc-stamp'); flash('disc-saved'); drawReport(); };
+
+  async function loadTop(){ top=await sGet('top')||DEF_TOP.map(t=>({...t})); renderTop(); }
+  function renderTop(){
+    const box=document.getElementById('toprows');
+    if(!top.length){ box.innerHTML='<div class="empty"><b>No content yet.</b>Rebuild from uploads or add a row.</div>'; return; }
+    box.innerHTML=top.map((r,i)=>'<div class="row"><span class="rank">'+(i+1)+'</span><div class="rmain"><div class="rtitle">'+r.t+' '+(r.pill?'<span class="pill '+r.pill+'">'+(r.pill==='win'?'winner':r.pill)+'</span>':'')+'</div><div class="rmeta">'+r.m+'</div></div><span class="rnum">'+r.n+'</span></div>').join('');
+  }
+  window.addTopRow=()=>{ const t=prompt('Title?'); if(!t)return; const n=prompt('Views?')||''; const m=prompt('Detail (duration, %, note)?')||''; top.push({t,m,n,pill:''}); renderTop(); };
+  window.saveTop=async()=>{ await sSet('top',top); flash('top-saved'); drawReport(); };
+  window.rebuildFromUploads=async()=>{
+    const rows=await sGet('uploads_rows')||[];
+    if(!rows.length){ alert('Add posts to the table in the Today tab first.'); return; }
+    top=rows.map(u=>({ t:(u.title||'(untitled)')+' · '+u.platform, m:u.format+(u.subs?' · '+u.subs+' subs':''), n:u.views||'', pill:/funny|tita|family|float|joke|meditate/i.test(u.title||'')?'win':(/dive|freediv|barracuda/i.test(u.title||'')?'dive':'') }));
+    renderTop(); alert('Rebuilt '+top.length+' rows from your table. Tweak then Save.');
+  };
+
+  async function loadIdeas(){ ideas=await sGet('ideas')||DEF_IDEAS.map(i=>({...i})); renderIdeas(); const m=await sGet('ideas_meta'); if(m&&m.when){const e=document.getElementById('ideas-stamp');e.innerHTML='updated <b>'+m.when+'</b>';} }
+  function renderIdeas(){
+    const box=document.getElementById('ideagrid');
+    if(!ideas.length){ box.innerHTML='<div class="card empty"><b>No ideas yet.</b>Add one, or summon the Creative team.</div>'; return; }
+    box.innerHTML=ideas.map((it,i)=>'<div class="card idea"><button class="del" onclick="delIdea('+i+')" title="remove">\u2715</button><h4>'+it.title+'</h4><div class="plat">'+it.plat+'</div><div class="hook">'+it.hook+'</div><div class="cta"><b>CTA:</b> '+it.cta+'</div></div>').join('');
+  }
+  window.addIdea=async()=>{ const title=document.getElementById('i_title').value.trim(); if(!title)return; ideas.push({title,plat:document.getElementById('i_plat').value.trim()||'Reel',hook:document.getElementById('i_hook').value.trim(),cta:document.getElementById('i_cta').value.trim()}); await sSet('ideas',ideas); await sSet('ideas_meta',{when:dstr}); stamp('ideas-stamp'); document.getElementById('i_title').value=document.getElementById('i_plat').value=document.getElementById('i_hook').value=document.getElementById('i_cta').value=''; renderIdeas(); flash('idea-saved'); };
+  window.delIdea=async(i)=>{ ideas.splice(i,1); await sSet('ideas',ideas); renderIdeas(); };
+
+  const CHECK=["Show my face in whatever I post today (non-negotiable)","Lead with a hook in the first 1\u20132 seconds","Caption talks to one person, in Taglish if it fits","Did I batch-film while I was already out?"];
+  async function renderChecklist(){
+    const box=document.getElementById('checklist'); const saved=await sGet('check:'+todayKey)||{}; box.innerHTML='';
+    CHECK.forEach((txt,i)=>{ const done=!!saved[i]; const d=document.createElement('div'); d.className='citem'+(done?' done':''); d.innerHTML='<input type="checkbox" '+(done?'checked':'')+'><label>'+txt+'</label>';
+      const cb=d.querySelector('input');
+      d.addEventListener('click',async e=>{ if(e.target.tagName!=='INPUT')cb.checked=!cb.checked; saved[i]=cb.checked; d.classList.toggle('done',cb.checked); await sSet('check:'+todayKey,saved); });
+      box.appendChild(d); });
+  }
+
+  async function loadToday(){ const d=await sGet('today:'+todayKey); if(d)document.getElementById('mood').value=d.mood||''; }
+  window.saveToday=async()=>{ await sSet('today:'+todayKey,{mood:document.getElementById('mood').value}); flash('today-saved'); };
+  async function loadNumbers(){ const d=await sGet('numbers')||{}; ['followers','best','reach','saves'].forEach(k=>{const el=document.getElementById('n_'+k); if(el&&d[k])el.value=d[k];}); }
+  window.saveNumbers=async()=>{ await sSet('numbers',{followers:document.getElementById('n_followers').value,best:document.getElementById('n_best').value,reach:document.getElementById('n_reach').value,saves:document.getElementById('n_saves').value}); flash('num-saved'); };
+  async function renderHunt(){ const box=document.getElementById('hunt-log'); const list=await sGet('huntlog')||[]; box.innerHTML=list.length?list.slice().reverse().map(e=>'<div class="logentry"><div class="ld">'+e.date+' \u00B7 '+(e.who||'\u2014')+'</div><div class="lt">'+(e.steal||'')+'</div></div>').join(''):'<div class="empty"><b>No outliers logged yet.</b>Run the hunt, then drop finds here.</div>'; }
+  window.saveHunt=async()=>{ const list=await sGet('huntlog')||[]; const who=document.getElementById('h_who').value.trim(),steal=document.getElementById('h_steal').value.trim(); if(!who&&!steal)return; list.push({date:dstr,who,steal}); await sSet('huntlog',list); document.getElementById('h_who').value='';document.getElementById('h_steal').value=''; flash('hunt-saved'); renderHunt(); };
+  async function renderLog(){ const box=document.getElementById('log-history'); const list=await sGet('captainslog')||[]; box.innerHTML=list.length?list.slice().reverse().map(e=>'<div class="logentry"><div class="ld">'+e.date+'</div><div class="lt"><b>Posted:</b> '+(e.did||'\u2014')+'\n<b>Won:</b> '+(e.win||'\u2014')+'\n<b>Next:</b> '+(e.next||'\u2014')+'</div></div>').join(''):'<div class="empty"><b>Log is empty.</b>Daily entries stack here.</div>'; }
+  window.saveLog=async()=>{ const list=await sGet('captainslog')||[]; const did=document.getElementById('l_did').value.trim(),win=document.getElementById('l_win').value.trim(),next=document.getElementById('l_next').value.trim(); if(!did&&!win&&!next)return; list.push({date:dstr,did,win,next}); await sSet('captainslog',list); document.getElementById('l_did').value=document.getElementById('l_win').value=document.getElementById('l_next').value=''; flash('log-saved'); renderLog(); };
+  window.clearLog=async()=>{ await sSet('captainslog',[]); renderLog(); };
+
+  // ---------- NUMBERS: weekly summary + per-video chart ----------
+  async function renderWeeklySummary(){
+    const body=document.getElementById('weekly-summary-body'); if(!body)return;
+    const weeks=await sGet('growth')||[];
+    if(!weeks.length){ body.innerHTML='<tr class="empty-row"><td colspan="7">No weeks logged yet — add data in the Growth tab (14m).</td></tr>'; return; }
+    const cell=(v,base)=>{ if(base)return '<td class="base">baseline</td>'; const cls=v>0?'up':(v<0?'dn':''); return '<td class="'+cls+'">'+(v>0?'+':'')+v.toLocaleString()+'</td>'; };
+    body.innerHTML=weeks.slice().reverse().map((w,ri)=>{
+      const idx=weeks.length-1-ri; const prev=idx>0?weeks[idx-1]:null; const t=weekTotals(w);
+      if(!prev){ return '<tr><td>Wk of '+w.week+'</td>'+GMETRICS.map(()=>'<td class="base">baseline</td>').join('')+'</tr>'; }
+      const p=weekTotals(prev);
+      return '<tr><td>Wk of '+w.week+'</td>'+GMETRICS.map(m=>cell(t[m]-p[m],false)).join('')+'</tr>';
+    }).join('');
+  }
+
+  let vidMetric='views';
+  const VID_METRICS=[['views','Views'],['likes','Likes'],['comments','Comments'],['shares','Shares'],['saves','Saves'],['ret','Retention %']];
+  function renderVidToggle(){
+    const box=document.getElementById('vid-metric-toggle'); if(!box)return;
+    box.innerHTML=VID_METRICS.map(([k,lbl])=>'<button class="mtoggle'+(k===vidMetric?' on':'')+'" data-m="'+k+'">'+lbl+'</button>').join('');
+    box.querySelectorAll('.mtoggle').forEach(b=>b.addEventListener('click',()=>{ vidMetric=b.dataset.m; renderVidToggle(); drawVideoChart(); }));
+  }
+  async function drawVideoChart(){
+    const svg=document.getElementById('chart-videos'); if(!svg)return;
+    const rows=(await sGet('uploads_rows'))||uploads||[];
+    let data=rows.map(u=>({ label:(u.title||'untitled'), plat:u.platform, val:parseNum(u[vidMetric]), win:/funny|tita|family|float|joke|meditate/i.test(u.title||''), dive:/dive|freediv|barracuda/i.test(u.title||'') }))
+                 .filter(d=>d.val!=null && d.val>0).sort((a,b)=>b.val-a.val).slice(0,8);
+    if(!data.length){ svg.innerHTML='<text x="330" y="160" text-anchor="middle" fill="'+C.muted+'" font-family="Inter" font-size="13">No '+vidMetric+' data in your post table yet</text>'; return; }
+    const W=660,H=320,padL=120,padR=44,padT=14,padB=20;
+    const max=Math.max(...data.map(d=>d.val));
+    const rh=(H-padT-padB)/data.length, bh=Math.min(26,rh*0.62);
+    let g='';
+    data.forEach((d,i)=>{ const y=padT+rh*i+(rh-bh)/2; const w=(d.val/max)*(W-padL-padR);
+      const col=d.win?C.good:(d.dive?C.tide:C.muted);
+      const lbl=d.label.length>20?d.label.slice(0,18)+'…':d.label;
+      g+='<text x="'+(padL-8)+'" y="'+(y+bh/2+4)+'" text-anchor="end" font-family="Inter" font-size="10.5" fill="'+C.abyss+'">'+lbl.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</text>';
+      g+='<rect x="'+padL+'" y="'+y+'" width="'+Math.max(2,w)+'" height="'+bh+'" rx="5" fill="'+col+'"/>';
+      const valTxt=vidMetric==='ret'?d.val+'%':d.val.toLocaleString();
+      g+='<text x="'+(padL+w+7)+'" y="'+(y+bh/2+4)+'" font-family="Fraunces,serif" font-size="12" font-weight="600" fill="'+C.abyss+'">'+valTxt+'</text>';
+    });
+    g+='<g transform="translate('+padL+','+(H-4)+')"><rect width="10" height="10" rx="2" fill="'+C.good+'"/><text x="15" y="9" font-family="Inter" font-size="9.5" fill="'+C.muted+'">funny/personal</text><rect x="118" width="10" height="10" rx="2" fill="'+C.tide+'"/><text x="133" y="9" font-family="Inter" font-size="9.5" fill="'+C.muted+'">dive</text></g>';
+    svg.innerHTML=g;
+  }
+
+
+  function parseNum(s){ if(!s&&s!==0)return null; s=(''+s).replace(/,/g,'').trim(); if(s==='')return null; const m=s.match(/([\d.]+)\s*([KkMm]?)/); if(!m)return null; let n=parseFloat(m[1]); if(isNaN(n))return null; if(/k/i.test(m[2]))n*=1000; if(/m/i.test(m[2]))n*=1000000; return Math.round(n); }
+  function fmtNum(n){ if(n===null||n===undefined)return '—'; return n.toLocaleString(); }
+  const GMETRICS=['subs','views','likes','comments','shares','saves'];
+  function renderGrowthForm(){
+    const body=document.getElementById('gtable-body');
+    body.innerHTML=PLATFORMS.map(p=>'<tr><td class="plat">'+p+'</td>'+GMETRICS.map(f=>'<td><input data-p="'+p+'" data-f="'+f+'" placeholder="total"></td>').join('')+'</tr>').join('');
+  }
+  window.loadLatestIntoForm=async()=>{
+    const weeks=await sGet('growth')||[];
+    if(!weeks.length){ alert('No previous week saved yet.'); return; }
+    const last=weeks[weeks.length-1];
+    document.querySelectorAll('#gtable-body input').forEach(el=>{ const p=el.dataset.p,f=el.dataset.f; if(last.data[p]&&last.data[p][f]!=null) el.value=last.data[p][f]; });
+  };
+  window.saveGrowthWeek=async()=>{
+    const week=document.getElementById('g-week').value || todayKey;
+    const data={};
+    document.querySelectorAll('#gtable-body input').forEach(el=>{ const p=el.dataset.p,f=el.dataset.f; const v=parseNum(el.value); if(v!=null){ data[p]=data[p]||{}; data[p][f]=v; } });
+    if(!Object.keys(data).length){ alert('Enter at least one number first.'); return; }
+    let weeks=await sGet('growth')||[];
+    const exist=weeks.findIndex(w=>w.week===week);
+    if(exist>=0) weeks[exist]={week,data}; else weeks.push({week,data});
+    weeks.sort((a,b)=>a.week<b.week?-1:1);
+    await sSet('growth',weeks);
+    flash('g-saved'); renderGrowth(); renderWeeklySummary(); 
+  };
+  function weekTotals(w){ const o={}; GMETRICS.forEach(m=>o[m]=0); PLATFORMS.forEach(p=>{ if(w.data[p]) GMETRICS.forEach(m=>{ o[m]+=w.data[p][m]||0; }); }); return o; }
+  async function renderGrowth(){
+    const weeks=await sGet('growth')||[];
+    const kSubsD=document.getElementById('g-subs-delta'),kViewsD=document.getElementById('g-views-delta'),kSubsT=document.getElementById('g-subs-total'),kBest=document.getElementById('g-best');
+    if(weeks.length){
+      const latest=weeks[weeks.length-1], prev=weeks.length>1?weeks[weeks.length-2]:null;
+      const lt=weekTotals(latest);
+      kSubsT.textContent=fmtNum(lt.subs);
+      if(prev){
+        const pt=weekTotals(prev);
+        const ds=lt.subs-pt.subs, dv=lt.views-pt.views;
+        kSubsD.textContent=(ds>=0?'+':'')+fmtNum(ds); kSubsD.style.color=ds>=0?'var(--good)':'var(--coral)';
+        kViewsD.textContent=(dv>=0?'+':'')+fmtNum(dv); kViewsD.style.color=dv>=0?'var(--good)':'var(--coral)';
+        // best platform by subs delta
+        let best='—',bestN=-Infinity;
+        PLATFORMS.forEach(p=>{ const a=(latest.data[p]&&latest.data[p].subs)||0, b=(prev.data[p]&&prev.data[p].subs)||0; if(a-b>bestN&&(latest.data[p]||prev.data[p])){ bestN=a-b; best=p; } });
+        kBest.textContent=best+(bestN>0?' (+'+fmtNum(bestN)+')':'');
+      } else { kSubsD.textContent='first week'; kViewsD.textContent='first week'; kBest.textContent='need 2 weeks'; }
+    } else { kSubsD.textContent=kViewsD.textContent=kSubsT.textContent=kBest.textContent='—'; }
+    drawGrowthChart(weeks);
+    // history
+    const box=document.getElementById('growth-history');
+    if(!weeks.length){ box.innerHTML='<div class="empty"><b>No weeks logged yet.</b>Enter this week\'s totals above and save.</div>'; return; }
+    box.innerHTML=weeks.slice().reverse().map((w,ri)=>{
+      const idx=weeks.length-1-ri; const prev=idx>0?weeks[idx-1]:null;
+      const t=weekTotals(w);
+      let chips='<span class="gw-chip">'+fmtNum(t.subs)+' subs total</span>';
+      if(prev){ const pt=weekTotals(prev); const ds=t.subs-pt.subs, dv=t.views-pt.views;
+        chips+='<span class="gw-chip'+(ds<0?' down':'')+'"><b>'+(ds>=0?'+':'')+fmtNum(ds)+'</b> subs</span>';
+        chips+='<span class="gw-chip'+(dv<0?' down':'')+'"><b>'+(dv>=0?'+':'')+fmtNum(dv)+'</b> views</span>';
+      } else chips+='<span class="gw-chip">baseline week</span>';
+      return '<div class="grow-wk"><div class="gw-date">Week of '+w.week+'</div><div class="gw-rows">'+chips+'</div></div>';
+    }).join('');
+  }
+  function drawGrowthChart(weeks){
+    const svg=document.getElementById('chart-growth'); if(!svg)return;
+    if(weeks.length<2){ svg.innerHTML='<text x="330" y="140" text-anchor="middle" fill="'+C.muted+'" font-family="Inter" font-size="13">Log at least 2 weeks to see the climb</text>'; return; }
+    const deltas=weeks.map((w,i)=>{ if(i===0)return null; const t=weekTotals(w),p=weekTotals(weeks[i-1]); return {week:w.week,subs:t.subs-p.subs}; }).filter(Boolean);
+    const W=660,H=280,padL=46,padR=20,padT=20,padB=50;
+    const max=Math.max(10,...deltas.map(d=>d.subs)); const min=Math.min(0,...deltas.map(d=>d.subs));
+    const range=max-min||1;
+    const x=i=>padL+(deltas.length===1?0.5:(i/(deltas.length-1)))*(W-padL-padR);
+    const y=v=>padT+(1-(v-min)/range)*(H-padT-padB);
+    let g='';
+    [0,0.25,0.5,0.75,1].forEach(t=>{ const val=min+range*t; const yy=y(val); g+='<line x1="'+padL+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="'+C.foam+'"/><text x="'+(padL-6)+'" y="'+(yy+3)+'" text-anchor="end" font-family="Inter" font-size="9" fill="'+C.muted+'">'+Math.round(val).toLocaleString()+'</text>'; });
+    if(min<0){ const z=y(0); g+='<line x1="'+padL+'" y1="'+z+'" x2="'+(W-padR)+'" y2="'+z+'" stroke="'+C.muted+'" stroke-dasharray="3 3"/>'; }
+    // area + line
+    let line='',area='M'+x(0)+' '+y(0);
+    deltas.forEach((d,i)=>{ line+=(i?'L':'M')+x(i)+' '+y(d.subs)+' '; area+=' L'+x(i)+' '+y(d.subs); });
+    area+=' L'+x(deltas.length-1)+' '+y(min)+' Z';
+    g+='<path d="'+area+'" fill="'+C.lagoon+'" fill-opacity="0.12"/>';
+    g+='<path d="'+line+'" fill="none" stroke="'+C.tide+'" stroke-width="2.5"/>';
+    deltas.forEach((d,i)=>{ g+='<circle cx="'+x(i)+'" cy="'+y(d.subs)+'" r="5" fill="'+(d.subs>=0?C.good:C.coral)+'"/>';
+      g+='<text x="'+x(i)+'" y="'+(y(d.subs)-11)+'" text-anchor="middle" font-family="Fraunces,serif" font-size="12" font-weight="600" fill="'+C.abyss+'">'+(d.subs>=0?'+':'')+d.subs.toLocaleString()+'</text>';
+      const lbl=d.week.slice(5); g+='<text x="'+x(i)+'" y="'+(H-padB+18)+'" text-anchor="middle" font-family="Inter" font-size="9" fill="'+C.muted+'">'+lbl+'</text>';
+    });
+    svg.innerHTML=g;
+  }
+
+
+  const C={abyss:'#0a2540',tide:'#1c6e8c',lagoon:'#2bb3c0',coral:'#e8703a',good:'#2f9e7f',muted:'#6a7d88',sand:'#f3ece1',foam:'#cfeef0'};
+  function parseViews(s){ if(!s)return 0; s=(''+s).replace(/,/g,'').trim(); const m=s.match(/([\d.]+)\s*([KkMm]?)/); if(!m)return 0; let n=parseFloat(m[1])||0; if(/k/i.test(m[2]))n*=1000; if(/m/i.test(m[2]))n*=1000000; return n; }
+
+  function drawDonut(){
+    const svg=document.getElementById('chart-donut'); if(!svg)return;
+    const data=(disc||[]).map(d=>({label:d.label,val:parseFloat(d.val)||0}));
+    const known=data.reduce((a,b)=>a+b.val,0);
+    if(known<100) data.push({label:'Other',val:Math.max(0,100-known)});
+    const colors=[C.lagoon,C.tide,C.coral,C.sand];
+    const cx=110,cy=110,r=78,rin=46; let ang=-Math.PI/2; let paths='';
+    data.forEach((d,i)=>{ const frac=d.val/100; const a2=ang+frac*Math.PI*2;
+      const x1=cx+r*Math.cos(ang),y1=cy+r*Math.sin(ang),x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+      const xi1=cx+rin*Math.cos(a2),yi1=cy+rin*Math.sin(a2),xi2=cx+rin*Math.cos(ang),yi2=cy+rin*Math.sin(ang);
+      const large=frac>0.5?1:0;
+      paths+='<path d="M'+x1+' '+y1+' A'+r+' '+r+' 0 '+large+' 1 '+x2+' '+y2+' L'+xi1+' '+yi1+' A'+rin+' '+rin+' 0 '+large+' 0 '+xi2+' '+yi2+' Z" fill="'+colors[i%colors.length]+'"/>';
+      ang=a2; });
+    svg.innerHTML=paths+'<text x="110" y="106" text-anchor="middle" font-family="Fraunces,serif" font-size="26" font-weight="600" fill="'+C.abyss+'">'+(data[0].val)+'%</text><text x="110" y="124" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" fill="'+C.muted+'">Shorts feed</text>';
+    document.getElementById('donut-legend').innerHTML=data.map((d,i)=>'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;"><span style="width:13px;height:13px;border-radius:3px;background:'+colors[i%colors.length]+';flex-shrink:0;"></span><span style="font-size:13px;color:'+C.abyss+';font-weight:600;flex:1;">'+d.label+'</span><span style="font-family:Fraunces,serif;font-size:15px;color:'+C.tide+';">'+d.val+'%</span></div>').join('');
+  }
+
+  function drawBars(){
+    const svg=document.getElementById('chart-bars'); if(!svg)return;
+    let rows=(top||[]).map(r=>({t:r.t,v:parseViews(r.n),win:r.pill==='win',dive:r.pill==='dive'})).filter(r=>r.v>0).sort((a,b)=>b.v-a.v).slice(0,6);
+    if(!rows.length){ svg.innerHTML='<text x="320" y="150" text-anchor="middle" fill="'+C.muted+'" font-family="Inter">Add views in Numbers to draw this</text>'; return; }
+    const W=640,H=300,padL=18,padR=18,padT=14,padB=70,gw=W-padL-padR;
+    const max=Math.max(...rows.map(r=>r.v)); const bw=gw/rows.length*0.62, gap=gw/rows.length;
+    let g='';
+    [0,0.25,0.5,0.75,1].forEach(t=>{ const y=padT+(H-padT-padB)*(1-t); g+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="'+C.foam+'" stroke-width="1"/><text x="'+padL+'" y="'+(y-3)+'" font-family="Inter" font-size="9" fill="'+C.muted+'">'+Math.round(max*t).toLocaleString()+'</text>'; });
+    rows.forEach((r,i)=>{ const h=(r.v/max)*(H-padT-padB); const x=padL+gap*i+(gap-bw)/2; const y=padT+(H-padT-padB)-h;
+      const col=r.win?C.good:(r.dive?C.tide:C.muted);
+      g+='<rect x="'+x+'" y="'+y+'" width="'+bw+'" height="'+h+'" rx="5" fill="'+col+'"/>';
+      g+='<text x="'+(x+bw/2)+'" y="'+(y-6)+'" text-anchor="middle" font-family="Fraunces,serif" font-size="13" font-weight="600" fill="'+C.abyss+'">'+r.v.toLocaleString()+'</text>';
+      const lbl=r.t.length>22?r.t.slice(0,20)+'…':r.t;
+      g+='<text x="'+(x+bw/2)+'" y="'+(H-padB+16)+'" text-anchor="middle" font-family="Inter" font-size="9.5" fill="'+C.muted+'"><tspan>'+lbl.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</tspan></text>';
+    });
+    g+='<g transform="translate('+(padL)+','+(H-22)+')"><rect width="11" height="11" rx="2" fill="'+C.good+'"/><text x="16" y="10" font-family="Inter" font-size="10" fill="'+C.muted+'">funny / personal</text><rect x="130" width="11" height="11" rx="2" fill="'+C.tide+'"/><text x="146" y="10" font-family="Inter" font-size="10" fill="'+C.muted+'">dive</text></g>';
+    svg.innerHTML=g;
+  }
+
+  function drawScatter(){
+    const svg=document.getElementById('chart-scatter'); if(!svg)return;
+    // points: [views, retention%, win/dive] — uses known retention where present in meta, else from defaults
+    const pts=[
+      {t:'family tree',v:1166,ret:51.7,win:true},
+      {t:'Barracuda Lake',v:467,ret:15.2,dive:true},
+      {t:'Pushed Too Far',v:159,ret:9.5,dive:true},
+      {t:'ALONE IN SIARGAO',v:127,ret:29.3,win:true},
+      {t:'Sacred Lake',v:50,ret:26.5},
+      {t:'IG floating',v:1700,ret:42,win:true},
+      {t:'IG family/kids',v:1200,ret:40,win:true}
+    ];
+    const W=640,H=300,padL=46,padR=20,padT=16,padB=46;
+    const maxV=1800,maxR=60;
+    let g='';
+    [0,0.25,0.5,0.75,1].forEach(t=>{ const y=padT+(H-padT-padB)*(1-t); g+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="'+C.foam+'"/><text x="'+(padL-6)+'" y="'+(y+3)+'" text-anchor="end" font-family="Inter" font-size="9" fill="'+C.muted+'">'+Math.round(maxR*t)+'%</text>'; });
+    [0,0.5,1].forEach(t=>{ const x=padL+(W-padL-padR)*t; g+='<text x="'+x+'" y="'+(H-padB+18)+'" text-anchor="middle" font-family="Inter" font-size="9" fill="'+C.muted+'">'+Math.round(maxV*t).toLocaleString()+' views</text>'; });
+    g+='<text x="14" y="'+(padT+ (H-padT-padB)/2)+'" font-family="Inter" font-size="10" fill="'+C.muted+'" transform="rotate(-90 14 '+(padT+(H-padT-padB)/2)+')" text-anchor="middle">retention %</text>';
+    pts.forEach(p=>{ const x=padL+(Math.min(p.v,maxV)/maxV)*(W-padL-padR); const y=padT+(H-padT-padB)*(1-Math.min(p.ret,maxR)/maxR);
+      const col=p.win?C.good:(p.dive?C.tide:C.muted);
+      g+='<circle cx="'+x+'" cy="'+y+'" r="8" fill="'+col+'" fill-opacity="0.85"/>';
+      g+='<text x="'+x+'" y="'+(y-12)+'" text-anchor="middle" font-family="Inter" font-size="8.5" fill="'+C.muted+'">'+p.t+'</text>';
+    });
+    svg.innerHTML=g;
+  }
+
+  function drawReport(){
+    const total=(top||[]).reduce((a,r)=>a+parseViews(r.n),0);
+    const kv=document.getElementById('kpi-views'); if(kv) kv.textContent=total?total.toLocaleString():'—';
+    drawDonut(); drawBars(); drawScatter();
+  }
+
+  const TEAMS=[
+    {id:"strategy",ico:"\uD83E\uDDED",color:"#1c6e8c",name:"Strategy Team",roles:"Content \u00B7 Brand \u00B7 Audience \u00B7 Market \u00B7 Trend \u00B7 Social Strategist",focus:"What to make and why \u2014 pillars, positioning, competitor analysis, growth bets.",
+     task:"Look at my latest uploads below. Tell me: is my pillar weighting still right or should humor take more share? Name the ONE positioning move that widens my lead this month and the one competitor gap I'm not exploiting. Decide, don't list options. Challenge anything weak."},
+    {id:"creative",ico:"\uD83C\uDFAC",color:"#e8703a",name:"Creative Team",roles:"Creative Director \u00B7 Strategist \u00B7 Storyteller \u00B7 Concept \u00B7 Copy \u00B7 Script",focus:"Ideas into concepts \u2014 campaign ideas, storytelling, hooks, creative direction.",
+     task:"From my latest uploads, give me 5 fresh concepts that fuse the Tita humor with the freedive surprise \u2014 each with a scroll-stopping hook (first 1\u20132 sec), the story arc, and why it'd land. Make them feel like me, not generic."},
+    {id:"research",ico:"\uD83D\uDD2C",color:"#0f3b5c",name:"Research Team",roles:"Research \u00B7 Fact Check \u00B7 Industry \u00B7 Competitor Intel \u00B7 Consumer Insights",focus:"Gather and validate \u2014 data, trends, audience behavior, market intelligence.",
+     task:"Search live and bring me: what's trending RIGHT NOW in PH solo-travel / freedive / Tita-humor content, recurring audience pain points, and one data-backed reason my funny posts beat dive posts. Cite sources. Flag hype vs signal."},
+    {id:"writing",ico:"\u270D\uFE0F",color:"#2bb3c0",name:"Writing Team",roles:"Copy \u00B7 Ghost \u00B7 SEO \u00B7 Newsletter \u00B7 Editor",focus:"Written content \u2014 captions, articles, emails, scripts.",
+     task:"Pick my best-performing recent upload and write 5 caption options in my actual voice (warm, lowercase-friendly, Taglish where it fits, a little self-deprecating). Tell me which to ship and why. Add one reusable hook + CTA pair."},
+    {id:"video",ico:"\uD83D\uDCF9",color:"#14222e",name:"Video Production",roles:"Producer \u00B7 Director \u00B7 Videographer \u00B7 Editor \u00B7 Motion \u00B7 Sound",focus:"Video \u2014 YouTube, Reels, TikToks, Shorts.",
+     task:"Take my best recent idea and turn it into a film-ready plan: shot list, exact opening hook, pacing for Short vs long-form, text-overlay placement, and a one-woman-crew tip so I can shoot it solo."},
+    {id:"design",ico:"\uD83C\uDFA8",color:"#6a7d88",name:"Design Team",roles:"Graphic \u00B7 Brand \u00B7 Thumbnail \u00B7 Illustrator \u00B7 Motion",focus:"Visual assets \u2014 carousels, graphics, thumbnails, brand look.",
+     task:"Based on my top recent upload, design a thumbnail concept that earns the click without clickbait, plus a carousel layout for a Coron/Anilao guide. Describe colors, text placement, and the one visual that makes a post recognizably mine."},
+    {id:"social",ico:"\uD83D\uDCE3",color:"#1c6e8c",name:"Social Media Team",roles:"Social Manager \u00B7 Community \u00B7 Engagement \u00B7 Platform",focus:"Distribution and engagement \u2014 publishing, community, comments.",
+     task:"Build a 7-day publishing plan across IG, TikTok, YT, FB at a sustainable 3-post rhythm, informed by which of my recent uploads did best. Per post: best time, platform tweak, one comment-sparking prompt. Show me how to reply in my voice."},
+    {id:"seo",ico:"\uD83D\uDD0D",color:"#0f3b5c",name:"SEO & Discovery",roles:"SEO \u00B7 YouTube SEO \u00B7 Keyword \u00B7 Search Analyst",focus:"Get found \u2014 rankings, discoverability, metadata, keywords.",
+     task:"My search traffic is low. Using my recent Coron/Anilao/Siargao uploads, give me search-optimized titles, descriptions, and tags with terms people actually search. Rewrite one of my weak titles as proof."},
+    {id:"analytics",ico:"\uD83D\uDCC8",color:"#2bb3c0",name:"Analytics Team",roles:"Data \u00B7 Growth \u00B7 Performance \u00B7 Attribution",focus:"Measure \u2014 engagement, retention, conversions, ROI.",
+     task:"Read my latest uploads and numbers below. Tell me what actually moved, what to stop doing, and the single metric to obsess over next week. No vanity metrics \u2014 what predicts growth?"},
+    {id:"psych",ico:"\uD83E\uDDE0",color:"#e8703a",name:"Audience Psychology",roles:"Consumer Psych \u00B7 Behavioral \u00B7 Customer Research",focus:"Human behavior \u2014 motivation, triggers, desires.",
+     task:"From my latest uploads, explain WHY my self-deprecating Tita jokes outperform pretty dive clips \u2014 what emotion fires, who's really watching, what they want from me. Give 3 emotional triggers I'm underusing that still fit my calm brand."},
+    {id:"money",ico:"\uD83D\uDCB0",color:"#14222e",name:"Monetization Team",roles:"Marketing \u00B7 Funnel \u00B7 Offer \u00B7 Conversion Copy",focus:"Attention into revenue \u2014 leads, sales, positioning.",
+     task:"I have a crochet shop as quiet income and a growing adventure audience (see uploads). Map 3 realistic ways this audience could pay me without breaking the brand. Rank by effort vs payoff for a solo creator."},
+    {id:"knowledge",ico:"\uD83D\uDCDA",color:"#6a7d88",name:"Knowledge & Voice",roles:"Knowledge Manager \u00B7 Brand Voice \u00B7 Biographer",focus:"Organizes notes, learns your story, keeps you sounding like you.",
+     task:"Audit my latest uploads against my voice: am I sounding like me or like a polished brand? Pull recurring themes from my story (teacher \u2192 VA \u2192 freediver, calm under pressure, solo Filipina) I should weave in more."}
+  ];
+
+  function ctxBlock(uploads){
+    return 'I\'m Carla "Lhey" Labado \u2014 Just Lhey Things, a Filipina freediver/adventurer. Pillars right now: '+pillars.map(p=>p.name+' '+p.pct+'%').join(', ')+'. Voice: '+voice.slice(0,2).join(' / ')+'. My data shows Tita-coded solo-travel humor outperforms silent dive clips.\n\nMY LATEST UPLOADS ACROSS PLATFORMS:\n'+uploads;
+  }
+
+  async function renderTeams(){
+    const grid=document.getElementById('teamgrid'); const outs=await sGet('teamouts')||{};
+    grid.innerHTML=TEAMS.map(t=>'<div class="team" style="--accent:'+t.color+'" data-team="'+t.id+'">'+(outs[t.id]?'<span class="hasout">\u2713 has work</span>':'')+'<div class="tco"><span class="tico">'+t.ico+'</span><span class="tname">'+t.name+'</span></div><div class="tfocus">'+t.focus+'</div><div class="troles">'+t.roles+'</div><div class="summon">Summon team</div></div>').join('');
+    grid.querySelectorAll('.team').forEach(b=>b.addEventListener('click',()=>openTeam(b.dataset.team)));
+  }
+  let activeTeam=null;
+  async function openTeam(id){
+    const t=TEAMS.find(x=>x.id===id); if(!t)return; activeTeam=id;
+    const uploads=await getUploadsText();
+    const prompt='Work as my '+t.name+' ('+t.roles+').\n\n'+ctxBlock(uploads)+'\n\nYOUR JOB:\n'+t.task+'\n\nTalk in my voice, not corporate. Be specific and decisive.';
+    document.getElementById('modal-head').style.setProperty('--accent',t.color);
+    document.getElementById('modal-ico').textContent=t.ico;
+    document.getElementById('modal-title').textContent=t.name;
+    document.getElementById('modal-roles').innerHTML='<b>On this team:</b> '+t.roles;
+    document.getElementById('modal-prompt').textContent=prompt;
+    const outs=await sGet('teamouts')||{};
+    document.getElementById('modal-out').textContent=outs[id]?outs[id].text:'';
+    document.getElementById('scrim').classList.add('show');
+  }
+  window.closeModal=()=>document.getElementById('scrim').classList.remove('show');
+  window.copyModalPrompt=()=>{ navigator.clipboard.writeText(document.getElementById('modal-prompt').textContent).then(()=>flash('modal-saved')).catch(()=>{}); };
+  window.saveTeamOutput=async()=>{ if(!activeTeam)return; const outs=await sGet('teamouts')||{}; outs[activeTeam]={text:document.getElementById('modal-out').textContent,when:dstr}; await sSet('teamouts',outs); flash('modal-saved'); renderTeams(); };
+  document.getElementById('scrim').addEventListener('click',e=>{ if(e.target.id==='scrim')closeModal(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape')closeModal(); });
+
+  (async()=>{
+    await loadPillars(); await loadVoice(); await loadDisc(); await loadTop(); await loadIdeas();
+    await loadUploads(); renderChecklist(); loadToday(); loadNumbers(); renderHunt(); renderLog(); renderTeams();
+    renderGrowthForm(); renderGrowth();
+    renderWeeklySummary(); renderVidToggle(); drawVideoChart();
+    drawReport();
+  })();
+})();
+</script>
+
+</body>
+</html>
